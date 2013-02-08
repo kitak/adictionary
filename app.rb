@@ -1,34 +1,43 @@
 require 'sinatra'
+require 'sinatra/reloader'
+require 'active_support'
+require 'faraday'
 
 get '/index' do
+  erb :index
 end
 
 get '/result' do
-  keyword = params['text']
+  @keyword = params['text']
+
+  dijizo = Faraday::Connection.new(:url => 'http://public.dejizo.jp') do |builder|
+    builder.use Faraday::Request::UrlEncoded
+    builder.use Faraday::Adapter::NetHttp
+  end
+
+  dic_item = dijizo.get '/NetDicV09.asmx/SearchDicItemLite', {
+    "Dic" => 'EJdict',
+    "Word" => @keyword,
+    "Scope" => 'HEADWORD',
+    "Match" => 'STARTWITH',
+    "Merge" => 'AND',
+    "Prof" => 'XHTML',
+    "PageSize" => 1,
+    "PageIndex" => 0  
+  }
+  doc = Hash.from_xml(dic_item.body)
+  item_id = doc["SearchDicItemResult"]["TitleList"]["DicItemTitle"]["ItemID"]
+
+  item = dijizo.get '/NetDicV09.asmx/GetDicItemLite', {
+    "Dic" => 'EJdict',
+    "Item" => item_id,
+    "Loc" => '',
+    "Prof" => 'XHTML'  
+  }
+  doc = Hash.from_xml(item.body) 
+  doc.to_s
+  @result_word = doc["GetDicItemResult"]["Body"]["div"]["div"]
+
+  erb :result
 end
-
-  #$p0 = 'http://public.dejizo.jp/NetDicV09.asmx/';
-  #$p1 = 'SearchDicItemLite?Dic=EJdict';
-  #$p2 = '&Word=';
-  #$p3 = '&Scope=HEADWORD';
-  #$p4 = '&Match=STARTWITH';
-  #$p5 = '&Merge=AND';
-  #$p6 = '&Prof=XHTML';
-  #$p7 = '&PageSize=1';
-  #$p8 = '&PageIndex=0';
-
-  #$url = $p0.$p1.$p2.$keyword.$p3.$p4.$p5.$p6.$p7.$p8;
-
-  #$result = simplexml_load_file($url);
-  #$itemID = $result->TitleList->DicItemTitle->ItemID;
-
-  #$i0 = 'http://public.dejizo.jp/NetDicV09.asmx/GetDicItemLite?Dic=EJdict';
-  #$i1 = '&Item=';
-  #$i2 = '&Loc=';
-  #$i3 = '&Prof=XHTML';
-
-  #$item = $i0.$i1.$itemID.$i2.$i3;
-
-  #$resultid = simplexml_load_file($item);
-  #$resultword = $resultid->Body->div->div;
 
