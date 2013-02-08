@@ -1,9 +1,6 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    active_support (3.0.0)
-      activesupport (= 3.0.0)
-    activesupport (3.0.0)
     backports (2.7.1)
     eventmachine (1.0.0)
     faraday (0.8.5)
@@ -31,7 +28,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  active_support
   faraday
   sinatra
   sinatra-contrib

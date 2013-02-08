@@ -1,6 +1,7 @@
+# coding: utf-8
 require 'sinatra'
 require 'sinatra/reloader'
-require 'active_support'
+require 'rexml/document'
 require 'faraday'
 
 get '/index' do
@@ -25,18 +26,22 @@ get '/result' do
     "PageSize" => 1,
     "PageIndex" => 0  
   }
-  doc = Hash.from_xml(dic_item.body)
-  item_id = doc["SearchDicItemResult"]["TitleList"]["DicItemTitle"]["ItemID"]
+  doc = REXML::Document.new(dic_item.body)
 
-  item = dijizo.get '/NetDicV09.asmx/GetDicItemLite', {
-    "Dic" => 'EJdict',
-    "Item" => item_id,
-    "Loc" => '',
-    "Prof" => 'XHTML'  
-  }
-  doc = Hash.from_xml(item.body) 
-  doc.to_s
-  @result_word = doc["GetDicItemResult"]["Body"]["div"]["div"]
+  begin
+    item_id = doc.elements['//TitleList/DicItemTitle/ItemID'].text
+
+    item = dijizo.get '/NetDicV09.asmx/GetDicItemLite', {
+      "Dic" => 'EJdict',
+      "Item" => item_id,
+      "Loc" => '',
+      "Prof" => 'XHTML'  
+    }
+    doc = REXML::Document.new(item.body) 
+    @result_word = doc.elements['//Body/div/div'].text
+  rescue
+    @result_word = 'みつかりませんでした'
+  end
 
   erb :result
 end
