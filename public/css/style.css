@@ -91,12 +91,12 @@ h1, h2 {
 }
 
 .search-text h1:before {
-    content: url('../img/before.png');
+    content: url('/img/before.png');
     position: relative;
     top: 60px;
 }
 .search-text h1:after {
-    content: url('../img/after.png');
+    content: url('/img/after.png');
     position: relative;
     top: 60px;
 }
